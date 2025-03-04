@@ -2,14 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define TRUE  1 
-#define FALSE 0 
-#define testMessage "BEATTHESHAMECOCKS"
-#define codeMessage "GOTIGERSGOTIGERSG"
-#define testEncoded "HSTBZLVKNOFMISTCY"
+#define TRUE  1
+#define FALSE 0
+#define MAX_SIZE 32
 
-
-
+typedef char* commandArg;
 
 
 int isAlphabetic(char checkingChar)
@@ -34,9 +31,9 @@ RETURNS
 
 The integer returned has three possible variations with these corresponding meanings:
 
-0 -> The character is non-alphabetic 
-1 -> The character is an uppercase letter 
-2 -> The character is a lowercase letter 
+0 -> The character is non-alphabetic
+1 -> The character is an uppercase letter
+2 -> The character is a lowercase letter
 
 
 */
@@ -45,7 +42,6 @@ The integer returned has three possible variations with these corresponding mean
 
     int numericCheck = (int)(checkingChar);
 
-    
     if((numericCheck >= 0x41) && (numericCheck <= 0x5A))
     {
         return 0x01;
@@ -71,7 +67,7 @@ This function counts the number of alphabetic characters (i.e. letters of the al
 ARGUMENTS
 
 char *userString -> Pointer to the user string to be analyzed by the function
-int  sizeString  -> Integer that represents the size of the string so we can safely iterate 
+int  sizeString  -> Integer that represents the size of the string so we can safely iterate
 
 
 RETURNS
@@ -102,328 +98,265 @@ Returns an integer that represents the number of alphabetic characters (uppercas
 }
 
 
+char *strippedCapitalized(char *userString)
+/*
+
+PURPOSE
+This function returns a whitespace / nonalphabetic and fully capitalized verison of a string input by the user. When I wrote this I was thinking of just replicating
+doing str.strip().upper() in Python, as that's what the example code showed (when it comes to "rectifiying" the original inputs to be encoded).
+
+ARGUMENTS
+*userString -> A pointer to the original string to be stripped of whitespace and capitalized by the user.
 
 
-char *strippedCapitalized(char *userString, int sizeString)
+RETURNS
+*newString -> A pointer to the stripped, capitalized version of the argument/parameter string.
+
+
+
+
+*/
 {
 
     int ii;
-    int stringCounter = 0;
-    int alphabetCount = countAlphabetic(userString, sizeString);
-    char *newString = (char*)(malloc(sizeof(char) * alphabetCount));
+    int sizeString = strlen(userString) + 1;
+
+    int charCounter = 0;
+    int memoryCounter = 1;
+
+    char *newString = (char*)(malloc(sizeof(char) * memoryCounter));
 
 
     for(ii=0;ii<sizeString;ii++)
     {
 
-        if(isAlphabetic(userString[ii]) == 0x02)
+        int checkAlphabet = isAlphabetic(userString[ii]);
+
+        if(checkAlphabet == 0x01)
         {
 
-            newString[stringCounter] = (userString[ii] - 0x20);
-            stringCounter++;
+            newString[charCounter] = userString[ii];
+            charCounter++;
+
         }
 
-        else if(isAlphabetic(userString[ii]) == 0x01)
+        else if(checkAlphabet == 0x02)
         {
-            newString[stringCounter] = userString[ii];
-            stringCounter++;
+
+            newString[charCounter] = (userString[ii] - 0x20);
+            charCounter++;
         }
 
+        if(charCounter >= memoryCounter)
+        {
+
+            if(realloc(newString, 1));
+            // Technically if you don't operate on / "recognize" the void pointer return in some form it throws a warning -- #dealwithit
+
+            memoryCounter ++;
+
+        }
 
     }
 
 
     return newString;
-    
+
 
 }
 
 
+char *normalizeCode(char *userString, int desiredLength)
+/*
 
-char* normalizeCode(char *userString, int sizeString, int desiredLength)
+PURPOSE
+
+This function "normalizes" a code to the 
+
+
+ARGUMENTS
+
+
+RETURNS
+
+
+
+*/
+
 {
 
 
 
-    char* newString = (char*)(malloc(sizeof(char) * desiredLength));
-    int messageIndex  = 0;
-    int messageLength = 0;
+    int messageIndex   = 0;
+    int messageLength  = 0;
+    int originalLength = strlen(userString);
+
+    int memoryCounter = 1;
+    char* newString = (char*)(malloc(sizeof(char) * memoryCounter));
 
 
-
-    while(messageLength < (desiredLength))
+    while(messageLength < desiredLength)
     {
 
-        if(messageIndex > sizeString)
+
+        messageIndex = (messageIndex > originalLength) ? 0 : messageIndex;
+
+        int alphabetTest = isAlphabetic(userString[messageIndex]);
+
+        if(alphabetTest == 0x01)
         {
-            messageIndex = 0;
+            newString[messageLength] = userString[messageIndex];
+            messageLength++ ;
+        }
+        else if(alphabetTest == 0x02)
+        {
+
+            newString[messageLength] = userString[messageIndex] - 0x20;
+            messageLength++;
         }
 
-        char currentChar = userString[messageIndex];        
 
-        if((currentChar >= 0x61) && (currentChar <= 0x7A))
+        if(messageLength >= memoryCounter)
         {
-            newString[messageLength] = (currentChar - 0x20);
-            messageLength ++;
+
+            if(realloc(newString, 1));
+            memoryCounter++;
+
+
         }
 
-        else if((currentChar >= 0x41) && (currentChar <= 0x5A))
-        {
-            newString[messageLength] = currentChar;
-            messageLength ++;
-        }
-
-        
         messageIndex++;
-
-
     }
 
+
+    newString[memoryCounter] = 0x00;
 
     return newString;
-
 }
 
 
-char *createMessage(void)
-{
-    char* userEntry = (char*)(malloc(sizeof(char) * 32)) ;
+char encodeCharacter(char messageCharacter, char codingCharacter)
+/*
 
-    printf("Enter message here:\n");
-    fgets(userEntry, 32, stdin);
+PURPOSE
+This function simply encodes the character with the correct cipher protocol, i.e. shifts the 
 
-
-    char *newEntry = strippedCapitalized(userEntry, 32);
-    free(userEntry);
+ARGUMENTS
 
 
-    return newEntry;
-}
+RETURNS
 
 
-char* createStandardCode(int messageLength)
+
+*/
 {
 
-    char* userEntry = (char*)(malloc(sizeof(char) * messageLength)) ;
-    printf("Enter code word here:\n");
-
-    fgets(userEntry, messageLength, stdin);
-
-    char *newEntry = strippedCapitalized(userEntry, messageLength);
-
-    free(userEntry);
-
-    char *finishedCode = normalizeCode(newEntry, 32, (messageLength-1));
-
-    free(newEntry);
-
-    return finishedCode;
-
-
-
-}
-
-
-int shiftCharacter(char messageCharacter, char codingCharacter)
-{
-
-	int message_integer = (int)(messageCharacter);
-	int coding_integer  = (int)(codingCharacter);
-
-
-	int shiftedIndex = (message_integer + coding_integer) - 0x41;
-	if(shiftedIndex >= 0x5B)
+	char encodedChar = (messageCharacter + codingCharacter) - 0x41;
+	if(encodedChar >= 0x5B)
 	{
-		shiftedIndex = (shiftedIndex - 0x5B) + 0x41;
+		encodedChar = (messageCharacter + codingCharacter) - 0x5B;
 	}
 
+	return encodedChar;
 
-	return shiftedIndex;
 }
 
 
-int unshiftCharacter(char encodedChar, char codingChar)
+char *encodeMessage(char* userMessage, char* codingMessage)
+/*
+
+PURPOSE
+
+ARGUMENTS
+
+RETURNS
+
+
+*/
 {
 
+    int stringSize = strlen(userMessage);
+    char *encodedMessage = (char*)(malloc(sizeof(char) * stringSize));
 
-    int encoded_integer = (int)(encodedChar);
-    int coding_integer = (int)(codingChar);
-
-    int shiftedIndex = (encoded_integer - coding_integer) + 0x41;
-
-
-    if(shiftedIndex < 0x41)
+    for(int ii=0; ii<stringSize; ii++)
     {
-        shiftedIndex = (shiftedIndex + 0x5B) - 0x41;
+
+	encodedMessage[ii] = encodeCharacter(userMessage[ii], codingMessage[ii]);
+
     }
 
 
-    return shiftedIndex;
-
+    return encodedMessage;
 
 }
 
 
+char decodeCharacter(char encodedCharacter, char codingCharacter)
+/*
+
+PURPOSE
+
+ARGUMENTS
+
+RETURNS
 
 
-void shift_whole_message(char *message, char *coding, int size)
+*/
 {
-	int ii;
-	for(ii=0;ii<size;ii++)
-	{
-		char cMess = (char)(message[ii]);
-		char cCode = (char)(coding[ii]) ;
-		int shift  = shiftCharacter(cMess, cCode);
 
-		printf("%c",shift);
+	char decodedChar = (encodedCharacter - codingCharacter) + 0x41;
+
+	if(decodedChar < 0x41)
+	{
+		decodedChar += 0x1A ;
 
 	}
 
-	printf("\n");
-
-
-	return;
+	return decodedChar;
 }
 
 
+char *decodeMessage(char *userEncoded, char *codingMessage)
+/*
 
-void deshift_whole_message(char *encodedMessage, char *codingMessage, int size)
-{
-    int ii;
-    for(ii=0;ii<size;ii++)
-    {
+PURPOSE
 
-        char cEncoded = (char)(encodedMessage[ii]);
-        char cCoding  = (char)(codingMessage[ii]);
-        int unshifted = unshiftCharacter(cEncoded, cCoding);
-        printf("%c", unshifted);
-    }
+ARGUMENTS
+
+RETURNS
 
 
-
-    printf("\n");
-
-
-    return;
-
-
-}
-
-
-char *encodeMessage(char *userMessage, char *userCoding, int messageSize)
+*/
 {
 
-    int ii;
-    char *decodeString = (char*)(malloc(sizeof(char) * messageSize));
+	int stringSize = strlen(userEncoded);
+	char *decodedMessage = (char*)(malloc(sizeof(char) * stringSize));
 
-    for(ii=0;ii<messageSize;ii++)
-    {
-
-        char shiftedChar = shiftCharacter(userMessage[ii], userCoding[ii]);
-        decodeString[ii] = shiftedChar;
-    }
+	for(int ii=0; ii<stringSize; ii++)
+	{
+		decodedMessage[ii] = decodeCharacter(userEncoded[ii], codingMessage[ii]);
+	}
 
 
-    return decodeString;
-}
-
-char *decodeMessage(char *encodedMessage, char *codingMessage, int messageSize)
-{
-
-    int ii;
-    char *decodeString = (char*)(malloc(sizeof(char) * (messageSize+1)));
-
-    for(ii=0;ii<messageSize;ii++)
-    {
-        char unshiftedChar = unshiftCharacter(encodedMessage[ii], codingMessage[ii]);
-        decodeString[ii] = unshiftedChar;
-    }
-
-
-    decodeString[messageSize] = '\0';
-
-
-
-    return decodeString;
-
+	return decodedMessage;
 
 }
-
-
-
-int* findMessageIndices(char *wholeCommand, int sizeCommand)
-{
-
-
-    int startOne, endOne, startTwo, endTwo, ii, jj;
-
-
-    startOne = -1;
-    startTwo = -1;
-    endOne = -1;
-    endTwo = -1;
-
-
-    
-
-    int *indicesList = (int*)(malloc(sizeof(int) * 4));
-
-    for(ii=0;ii<(sizeCommand-1);ii++)
-    {
-
-        jj = ii + 1;
-
-
-        if((wholeCommand[ii] == 0x20) && (wholeCommand[jj] == 0x27))
-        {
-
-            if(startOne == -1)
-            {
-                startOne = (jj+1);
-            }
-            else
-            {
-                startTwo = (jj+1);
-            }
-
-
-        }
-
-
-        if((wholeCommand[ii] == 0x27) && ((wholeCommand[jj] == 0x20) || (wholeCommand[jj] == 0x00) || (wholeCommand[jj] == 0x0A)))
-        {
-
-            if(endOne == -1)
-            {
-                endOne = (ii-1);
-            }
-            else
-            {
-                endTwo = (ii-1);
-            }
-        }
-
-
-    }
-
-
-
-    indicesList[0] = startOne;
-    indicesList[1] = startTwo;
-    indicesList[2] = endOne;
-    indicesList[3] = endTwo;
-
-
-
-    return indicesList ;
-
-
-}
-
-
 
 
 char *fetchSubstring(const char *wholeMessage, int startIndex, int endIndex)
+/*
+
+PURPOSE
+
+
+ARGUMENTS
+
+
+
+RETURNS
+
+
+*/
 {
 
     int stringLength = (endIndex - startIndex) ;
@@ -446,86 +379,55 @@ char *fetchSubstring(const char *wholeMessage, int startIndex, int endIndex)
 
 
 
-
-
-void PRINT_DEBUG_STRING(char *debugString, int lenDebug)
+commandArg fetchArgument(char* argv_i)
 {
 
+	commandArg argumentFound = (commandArg)(malloc(sizeof(char) * MAX_SIZE));
+	int arg_idx = 0;
 
-    for(int ii=0;ii<lenDebug;ii++)
-    {
-        printf("%i 0x%X\n", ii, debugString[ii]);
-    }
+	while(argv_i[arg_idx] != 0x00)
+	{
 
-
-    return;
-}
-
-
-
-
-
-
-void fetchCommand(void)
-{
+		if(arg_idx == 31)
+		{
+			return argumentFound;
+		}
+		argumentFound[arg_idx] = argv_i[arg_idx];
+		arg_idx++;
+	}
 
 
-    // encode 'beat the shamecocks' 'go tigers'
-    // decode 'HSTB ZLV KNOFMISTCY' 'go tigers'
-    char *userEntry = (char*)(malloc(sizeof(char) * 128));
-
-
-    printf("Enter command here:\n");
-    fgets(userEntry, 128, stdin);
-
-
-
-    int entryLength = strlen(userEntry);
-    char *encodeTest = strstr(userEntry, "encode");
-    int *messageIndices = findMessageIndices(userEntry, entryLength);
-
-    char *subOne = fetchSubstring(userEntry, messageIndices[0], messageIndices[2]);
-    char *subTwo = fetchSubstring(userEntry, messageIndices[1], messageIndices[3]);
-
-    int sizeOne = (messageIndices[2] - messageIndices[0]) + 1;
-    int sizeTwo = (messageIndices[3] - messageIndices[1]) + 1;
-
-    char *subOneFixed = strippedCapitalized(subOne, sizeOne);
-    printf("New substring one: %s\n", subOneFixed);
-
-
-    sizeOne = strlen(subOneFixed);
-
-    char *subTwoFixed = normalizeCode(subTwo, sizeTwo, sizeOne);
-    printf("New substring two: %s\n", subTwoFixed);
-
-
-
-    if(encodeTest != NULL)
-    {
-        char *encodedVersion = encodeMessage(subOneFixed, subTwoFixed, sizeOne);
-        printf("%s\n", encodedVersion);
-        return;
-    }
-    
-
-    char *decodedVersion = decodeMessage(subOneFixed, subTwoFixed, sizeOne);
-    printf("%s\n", decodedVersion);
-
-    
-    return;
-
+	return argumentFound;
 
 }
 
-int main(int argc, char **argv)
+int main(int agrc, char **argv)
 {
 
 
-    fetchCommand();
+	commandArg argumentOne = strippedCapitalized(fetchArgument(argv[1]));
+	commandArg argumentMessage = strippedCapitalized((argv[2]));
+	commandArg argumentCoding  = normalizeCode(strippedCapitalized(fetchArgument(argv[3])), (int)(strlen(argumentMessage)));
+
+	int encodingCheck = strcmp(argumentOne, "ENCODE");
 
 
+	if(encodingCheck == 0)
+	{
+
+		commandArg output = encodeMessage(argumentMessage, argumentCoding);
+		printf("%s \n", output);
+
+	}
+	else
+	{
+
+		commandArg output = decodeMessage(argumentMessage, argumentCoding);
+		printf("%s \n", output);
 
 
-    return EXIT_SUCCESS;
-}
+	}
+
+	
+	return EXIT_SUCCESS;
+}	
